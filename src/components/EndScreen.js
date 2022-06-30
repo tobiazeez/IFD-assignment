@@ -1,12 +1,13 @@
 import React from 'react'
 
 
-export function EndScreen() {
+export const EndScreen = (props) => {
+    const timeSpent = Date.now() - props.time;
 
-  return (
+    return (
     <div>
      <p id="game_over">Game Over,</p>
-        <p id="time_spent">you spent {Date.now()} ms. </p>;
+        <p id="time_spent">you spent {timeSpent} ms. </p>
     </div>
   )
 }
