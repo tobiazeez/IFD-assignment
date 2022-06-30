@@ -5,52 +5,58 @@ import { useState } from "react";
 
 
 export const PlayScreen = (props) => {
-    // console.log(props)
-    const [int1, setInt1] = useState('');
-    const [int2, setInt2] = useState('');
-    const [sum, setSum] = useState('');
+    const [question, setQuestion] = useState(generateQuestion());
+    const [ans, setAns] = useState('');
     const [count, setCount] = useState(1);
     const {round, setGameState} = props;
 
+    function generateNumber(max) {
+      return Math.floor(Math.random() * (max))
+    }
 
-    const generateQuestion = () => {
-       setInt1(Math.floor(Math.random() * 10));
-       setInt2(Math.floor(Math.random() * 10));
+    function generateQuestion() {
+      return {
+       int1: generateNumber(10),
+       int2: generateNumber(10),
+       operator: ["+", "x"][generateNumber(1)]
+      }
     }
 
 
     const submit = (e) => {
         e.preventDefault();
-        const formValid = sum >= 0;
-        if (!formValid) {
-          return;}
-        
-        if (+int1 + +int2 === +sum) {
-          setCount((count) => count + 1);
-        
-          if (count == round) {
-            setGameState(2)
-          }
-          setSum('');
-          generateQuestion();
-          
-        }  
-    }
 
+        let actualAnswer
+        if (question.operator == "+")
+          actualAnswer = question.int1 + question.int2
+        if (question.operator == "x")
+          actualAnswer = question.int1 * question.int2
+
+        if (actualAnswer == ans && count < round) {
+            setAns('');
+            setCount((count) => count + 1);
+            setQuestion(generateQuestion());
+        } else if (actualAnswer == ans && count == round) { 
+          setGameState(2);
+          }
+      };
+    
       const handleClick = () => {
         setGameState(0)
       }
-  
+
+      const handleChange = (e) => {
+        setAns(e.target.value)
+      }
   
     return (
         <div className="gameplay">
        <form onSubmit={submit}>
-              <h2>{`${int1} +  ${int2}`}</h2>
-              <input value={sum} onChange={(e) => setSum(e.target.value)} />
-              <button type="submit">Play</button> <br/>
-              <button type="submit" onClick={generateQuestion}>Begin Game</button> 
-
+              <h2>{question.int1} {question.operator}  {question.int2}</h2>
+              <input value={ans} onChange={handleChange} />
+              <button type="submit">Play</button> 
         </form> 
+        <p>{count}</p>
         <button id="start" type="button" onClick={handleClick}>Home</button>
         </div>
     )
