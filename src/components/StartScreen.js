@@ -2,9 +2,8 @@ import React from 'react'
 
 
 
-
 export function StartScreen(props) {
-    const {round, setRound, setGameState} = props;
+    const {round, setRound, setGameState, setTime} = props;
 
     const handleChange = ({ target })=> {
         const newRound = target.value;
@@ -17,6 +16,7 @@ export function StartScreen(props) {
 
        const handleClick = () => {
         setGameState(1)
+        setTime(Date.now());
        }
 
   return (
@@ -24,7 +24,7 @@ export function StartScreen(props) {
      <h1>Hi, this is Tobi's math game, choose your parameters and get to calculating!</h1>
      <div className='rounds'>
          <label>Select number of rounds:</label>
-          <input value={round} onChange={handleChange} type='number' id='rounds-input' />
+          <input autoFocus value={round} onChange={handleChange} type='number' id='rounds-input' />
           <button id="start" type="button" onClick={handleClick}>
             Start Game 
           </button> 
@@ -32,4 +32,3 @@ export function StartScreen(props) {
     </div>
   )
 }
-
