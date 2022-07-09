@@ -2,6 +2,7 @@ import React from 'react'
 
 
 
+
 export function StartScreen(props) {
     const {round, setRound, setGameState, setTime} = props;
 
@@ -32,3 +33,4 @@ export function StartScreen(props) {
     </div>
   )
 }
+
