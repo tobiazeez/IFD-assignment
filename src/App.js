@@ -13,48 +13,55 @@ import {
 
 export const App = (props) => {
     const [count, setCount] = useState(1);
-    const [display, setDisplay] = useState([]);
+    // const [display, setDisplay] = useState([]);
     const [allGames, setAllGames] = useState([]);
     const [state, dispatch] = useReducer(reducer, undefined, init)
+    const [currentGame, setCurrentGame] = useState({});
     const setRound = (round) => dispatch(selectRounds(round));
     const setGameState = (gameState) => dispatch(changeGameState(gameState));
-    const setTime = () => dispatch(startTime());
+    // const setTime = () => dispatch(startTime());
+    
 
+    console.log("All games", allGames);
     // const goToNextScreen = () => {
     //     setGameState((prevState) => prevState + 1)
     // };
 
     return (
         <div>
-             {state.gameState === 2 && allGames.map((game, i) => {
-                        return (
-                        <div className="expressions-history">
-                            <h4>Game {i+1}</h4> 
-                            {
-                                game.map((question)=>(
-                                    <Expressions {...question} />
-                                ))}
-                        </div>
-                        );
-             }) }
-             
-            <div className='expressions-display'> 
-                    {display.map((question) => {
-                        return (
-                        <div key={question.int1}>
-                        <Expressions {...question}/>
-                    </div> 
-                     
-                    )})}
-            </div>
-            {state.gameState === 0 && <StartScreen setGameState = {setGameState} round = {state.round} setRound = {setRound} setTime = {setTime}/>}
+            {state.gameState === 0 && (
+                <StartScreen 
+                    allGames={allGames}
+                    setGameState={setGameState} 
+                    round={state.round} 
+                    setRound={setRound} 
+                    // setTime={setTime}
+                    setCurrentGame={setCurrentGame}
+                />
+            )}
 
-            {state.gameState === 1 && <PlayScreen setGameState = {setGameState}  count = {count} setCount = {setCount} round = {state.round} setRound = {setRound} display={display} setDisplay={setDisplay}/>}
+            {state.gameState === 1 && (
+                <PlayScreen 
+                    count = {count}
+                    setCount = {setCount}
+                    // round={state.round}
+                    setGameState={setGameState}
+                    currentGame={currentGame}
+                    setCurrentGame={setCurrentGame}   
+                    setAllGames={setAllGames}
+                />
+            )}
         
-            {state.gameState === 2 && <EndScreen setGameState = {setGameState}  count = {count} setCount = {setCount} time = {state.time}  setTime={setTime} round = {state.round} setRound = {setRound} display = {display} setDisplay = {setDisplay} allGames = {allGames} setAllGames = {setAllGames}/>}
-
+            {state.gameState === 2 && (
+                <EndScreen
+                    count = {count}
+                    setCount = {setCount} 
+                    setRound = {setRound}
+                    setGameState={setGameState}  
+                    allGames={allGames} 
+                    setAllGames={setAllGames}
+                />
+            )}
         </div>
     );
-    
-
 };

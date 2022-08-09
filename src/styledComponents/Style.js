@@ -3,9 +3,9 @@ import styled from "styled-components";
 export const Style = styled.div`
     background-color: white;
        color: ${(props) => {
-        const { speed, actualAnswer, ans } = props;
+        const { speed, correct } = props;
         let textColor = "";
-        if (actualAnswer == ans) {
+        if (correct) {
             if(speed < 3){
                 textColor = "green";
             } else {
@@ -16,4 +16,4 @@ export const Style = styled.div`
         }
             return textColor;
        }};
-`;
+`

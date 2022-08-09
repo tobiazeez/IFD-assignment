@@ -1,108 +1,73 @@
-import Mathemagician from "game_lobby_server/src/games/Mathemagician";
 import React from "react"
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 export const PlayScreen = (props) => {
-    const {count, setCount, round, setGameState, display, setDisplay} = props;
+    const { count, setCount, setGameState, currentGame, setCurrentGame, setAllGames } = props;
 
-    const [operator, setOperator] = useState(null);
-    const [int1, setInt1] = useState(null);
-    const [int2, setInt2] = useState(null);
-    const [ans, setAns] = useState('');
-    const [skipCount, setSkipCount] = useState(0);
-    const time = Date.now();
+    const [gamesInSession, setGamesInSession] = useState([]); 
+    const [ ans, setAns ] = useState("");
+    const [checkingAnswer, setCheckingAnswer] = useState(false)
 
-    useEffect(() => generateQuestion(), []);
-    const generateQuestion = () => {
-
-      const operators = ["+", "-", "x","/"]
-      const noOfOperators = operators.length
-      const operatorindex = [Math.floor(Math.random() * (noOfOperators - 1))]
-
-    setOperator(operators[operatorindex]);
-    setInt1(Math.floor(Math.random() * 20));
-    setInt2(Math.floor(Math.random() * 20));
-}
+    const { nextExpression, skipsRemaining } = currentGame;
+    const { lhs, rhs, operator } = nextExpression;
 
       const handleSkip = () => {
-        setSkipCount((skipCount) => skipCount + 1);
-        setCount((count) => count + 1);
-        generateQuestion();
-        if (count == round){
-          setGameState(2); 
+        calculateGame(true);
+      };
+
+      const playGame = (e) => {
+        e.preventDefault();
+        if (ans.length === nextExpression.correctAnswerLength){
+           calculateGame();
+           setCheckingAnswer(true)
         }
       }
 
-    const playGame = async (e) => {
-        e.preventDefault();
 
-          console.log('started'); 
-          await fetch("http://localhost:8081/games/gameId/moves", {
+    const calculateGame = async (skip = false) => {
+        const gameId = currentGame?.id;
+          // console.log('started'); 
+          await fetch(`http://localhost:8081/games/${gameId}/moves`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            // id: 
-            guess: "skip"
-          })
+            guess: skip ? "skip" : ans,
+          }),
         })
         .then((res) => res.json())
-        .then((data) => 
-          console.log("Data", data)
-        )
-        .catch((error) => {
-          console.log("error")
-        })
-        
-    
-       //  const handleSubmit = () => {
-            // setGameState(1);
-            // setTime(Date.now());
-            // setIsLoading(false);
-          
-           
+        .then((data) => {
+          const { game, move } = data;
 
-        // let actualAnswer
-        // if (operator == "+")
-        //   actualAnswer = int1 + int2
-        // if (operator == "-")
-        //   actualAnswer = int1 - int2
-        // if (operator == "x")
-        //   actualAnswer = int1 * int2
-        // if (operator == "/")
-        //   actualAnswer = int1 / int2 
+          const gameJustPlayed = {
+            ...currentGame,
+            ...move,
+            ans: ans
+          };
 
-        //   if (actualAnswer.toString().length === ans.toString().length) {
-        //     if(count < round){
-        //       setDisplay(() => [...display, {
-        //         int1: int1,
-        //         int2: int2,
-        //         actualAnswer: actualAnswer,
-        //         operator: operator,
-        //         ans: ans,
-        //         timeTaken: Date.now()-time,
-        //         speed: Math.round((Date.now()-time)/1000)
-        //     }]);
-        //       setAns('');
-        //       setCount((count) => count + 1);
-        //       generateQuestion();
-        //   }else if (count == round) {
-        //   setDisplay(() => [...display, {
-        //       int1: int1,
-        //       int2: int2,
-        //       actualAnswer: actualAnswer,
-        //       operator: operator,
-        //       ans: ans,
-        //       timeTaken: Date.now()-time,
-        //       speed: Math.round((Date.now()-time)/1000)
-        //   }]);
+          setGamesInSession((allPrevGamesInSession) => [
+            ...allPrevGamesInSession, {...gameJustPlayed}
+          ]);
+
+          const {nextExpression} = game;
+         if(nextExpression) {
+          setCurrentGame(game);
+          setAns("");
+          setCount((count) => count + 1);
+          setCheckingAnswer(false)
+         } else {
+          setAllGames((allPrevGames) => [...allPrevGames, [...gamesInSession, gameJustPlayed]]);
           setGameState(2);
-      }
-    
-      ;
+         }
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+      };
 
       const goHome = () => {
+        setAllGames([])
         setGameState(0)
       }
 
@@ -111,18 +76,16 @@ export const PlayScreen = (props) => {
       }
 
     return (
-        <div className="gameplay">
-       <form onSubmit={playGame}>
-              <h2>{int1} {operator} {int2}</h2>
-              <input autoFocus value={ans} onChange={handleChange}/>
-              <button type="submit">Play</button> <br></br> 
-              {skipCount < Math.floor(round / 3) ? <button onClick={handleSkip}>Skip</button> : ''}
-              
-              
-        </form> 
-        <p>Rounds:{count}</p>
-        <button id="start" type="button" onClick={goHome}>Home</button>
-        </div>
-    )
-    
+      <div className="gameplay">
+      <form onSubmit={playGame}>
+             <h2>{lhs} {operator} {rhs}</h2>
+             <input autoFocus value={ans} onChange={handleChange}/>
+             <button type="submit"  disabled={checkingAnswer}>{checkingAnswer? "Checking":"Play"}</button> <br></br> 
+            {Boolean(skipsRemaining) && <button onClick={handleSkip}>Skip</button>}   
+       </form> 
+       <p>Rounds:{count}</p>
+       <button id="start" type="button" onClick={goHome}>Home</button>
+       </div>
+   )
+   
 }

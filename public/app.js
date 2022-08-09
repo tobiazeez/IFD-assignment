@@ -32860,47 +32860,6 @@
 	  };
 	}
 
-	function ownKeys(object, enumerableOnly) {
-	  var keys = Object.keys(object);
-
-	  if (Object.getOwnPropertySymbols) {
-	    var symbols = Object.getOwnPropertySymbols(object);
-	    enumerableOnly && (symbols = symbols.filter(function (sym) {
-	      return Object.getOwnPropertyDescriptor(object, sym).enumerable;
-	    })), keys.push.apply(keys, symbols);
-	  }
-
-	  return keys;
-	}
-
-	function _objectSpread2(target) {
-	  for (var i = 1; i < arguments.length; i++) {
-	    var source = null != arguments[i] ? arguments[i] : {};
-	    i % 2 ? ownKeys(Object(source), !0).forEach(function (key) {
-	      _defineProperty(target, key, source[key]);
-	    }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) {
-	      Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
-	    });
-	  }
-
-	  return target;
-	}
-
-	function _defineProperty(obj, key, value) {
-	  if (key in obj) {
-	    Object.defineProperty(obj, key, {
-	      value: value,
-	      enumerable: true,
-	      configurable: true,
-	      writable: true
-	    });
-	  } else {
-	    obj[key] = value;
-	  }
-
-	  return obj;
-	}
-
 	var jsxRuntime = {exports: {}};
 
 	var reactJsxRuntime_development = {};
@@ -34206,16 +34165,27 @@
 	    round,
 	    setRound,
 	    setGameState,
-	    setTime
+	    setCurrentGame,
+	    allGames
 	  } = props;
 	  const [isLoading, setIsLoading] = react.exports.useState(false);
 	  const [requestStatus, setRequestStatus] = react.exports.useState("");
+	  const CONTAINS_GAMES = allGames.length > 0;
+	  react.exports.useEffect(() => {
+	    if (CONTAINS_GAMES) {
+	      startGame();
+	    }
+	  }, []);
 	  const successful = requestStatus === "success";
 	  const failure = requestStatus === "error";
 
 	  const startGame = async e => {
 	    setIsLoading(true);
-	    e.preventDefault();
+
+	    if (e) {
+	      e.preventDefault();
+	    }
+
 	    console.log('about to start');
 	    await fetch("http://localhost:8081/games ", {
 	      method: 'POST',
@@ -34228,14 +34198,13 @@
 	      })
 	    }).then(res => res.json()).then(data => {
 	      setRequestStatus("success");
+	      setCurrentGame(data);
 	      console.log("Data", data);
 	    }).catch(error => {
 	      setRequestStatus("error");
 	      console.log("error.message");
-	    }); //  const handleSubmit = () => {
-
+	    });
 	    setGameState(1);
-	    setTime(Date.now());
 	    setIsLoading(false);
 	  };
 
@@ -34247,133 +34216,163 @@
 	    setRound(newRound);
 	  };
 
-	  return /*#__PURE__*/jsxRuntime.exports.jsxs("div", {
-	    children: [/*#__PURE__*/jsxRuntime.exports.jsxs("h1", {
-	      children: ["Hi, this is Tobi's math game,", /*#__PURE__*/jsxRuntime.exports.jsx("br", {}), "choose your parameters and get to calculating!"]
-	    }), requestStatus && /*#__PURE__*/jsxRuntime.exports.jsxs("div", {
-	      className: `feedback-message ${failure && "error"} ${successful && "success"}`,
-	      children: [/*#__PURE__*/jsxRuntime.exports.jsx("p", {
-	        children: successful && "Yay! you can now play your game"
-	      }), /*#__PURE__*/jsxRuntime.exports.jsx("p", {
-	        children: failure && "oopsies"
-	      })]
-	    }), /*#__PURE__*/jsxRuntime.exports.jsx("div", {
-	      className: "rounds",
-	      children: /*#__PURE__*/jsxRuntime.exports.jsxs("form", {
-	        onSubmit: startGame,
-	        children: [/*#__PURE__*/jsxRuntime.exports.jsx("label", {
-	          children: "Select number of rounds:"
-	        }), /*#__PURE__*/jsxRuntime.exports.jsx("input", {
-	          autoFocus: true,
-	          value: round,
-	          onChange: handleChange,
-	          type: "number",
-	          id: "rounds-input",
-	          min: 1,
-	          max: 20,
-	          required: true
-	        }), /*#__PURE__*/jsxRuntime.exports.jsx("button", {
-	          id: "start",
-	          type: "submit",
-	          disabled: isLoading,
-	          children: isLoading ? "loading..." : "Start Game"
+	  return /*#__PURE__*/jsxRuntime.exports.jsx(jsxRuntime.exports.Fragment, {
+	    children: CONTAINS_GAMES ? /*#__PURE__*/jsxRuntime.exports.jsx(jsxRuntime.exports.Fragment, {}) : /*#__PURE__*/jsxRuntime.exports.jsxs("div", {
+	      children: [/*#__PURE__*/jsxRuntime.exports.jsxs("h1", {
+	        children: ["Hi, this is Tobi's math game,", /*#__PURE__*/jsxRuntime.exports.jsx("br", {}), "choose your parameters and get to calculating!"]
+	      }), requestStatus && /*#__PURE__*/jsxRuntime.exports.jsxs("div", {
+	        className: `feedback-message ${failure && "error"} ${successful && "success"}`,
+	        children: [/*#__PURE__*/jsxRuntime.exports.jsx("p", {
+	          children: successful && "Yay! you can now play your game"
+	        }), /*#__PURE__*/jsxRuntime.exports.jsx("p", {
+	          children: failure && "oopsies"
 	        })]
-	      })
-	    })]
+	      }), /*#__PURE__*/jsxRuntime.exports.jsx("div", {
+	        className: "rounds",
+	        children: /*#__PURE__*/jsxRuntime.exports.jsxs("form", {
+	          onSubmit: startGame,
+	          children: [/*#__PURE__*/jsxRuntime.exports.jsx("label", {
+	            children: "Select number of rounds:"
+	          }), /*#__PURE__*/jsxRuntime.exports.jsx("input", {
+	            autoFocus: true,
+	            value: round,
+	            onChange: handleChange,
+	            type: "number",
+	            id: "rounds-input",
+	            min: "1",
+	            max: "20",
+	            required: true
+	          }), /*#__PURE__*/jsxRuntime.exports.jsx("button", {
+	            id: "start",
+	            type: "submit",
+	            disabled: isLoading,
+	            children: isLoading ? "loading..." : "Start Game"
+	          })]
+	        })
+	      })]
+	    })
 	  });
+	}
+
+	function ownKeys(object, enumerableOnly) {
+	  var keys = Object.keys(object);
+
+	  if (Object.getOwnPropertySymbols) {
+	    var symbols = Object.getOwnPropertySymbols(object);
+	    enumerableOnly && (symbols = symbols.filter(function (sym) {
+	      return Object.getOwnPropertyDescriptor(object, sym).enumerable;
+	    })), keys.push.apply(keys, symbols);
+	  }
+
+	  return keys;
+	}
+
+	function _objectSpread2(target) {
+	  for (var i = 1; i < arguments.length; i++) {
+	    var source = null != arguments[i] ? arguments[i] : {};
+	    i % 2 ? ownKeys(Object(source), !0).forEach(function (key) {
+	      _defineProperty(target, key, source[key]);
+	    }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) {
+	      Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
+	    });
+	  }
+
+	  return target;
+	}
+
+	function _defineProperty(obj, key, value) {
+	  if (key in obj) {
+	    Object.defineProperty(obj, key, {
+	      value: value,
+	      enumerable: true,
+	      configurable: true,
+	      writable: true
+	    });
+	  } else {
+	    obj[key] = value;
+	  }
+
+	  return obj;
 	}
 
 	const PlayScreen = props => {
 	  const {
 	    count,
 	    setCount,
-	    round,
 	    setGameState,
-	    display,
-	    setDisplay
+	    currentGame,
+	    setCurrentGame,
+	    setAllGames
 	  } = props;
-	  const [operator, setOperator] = react.exports.useState(null);
-	  const [int1, setInt1] = react.exports.useState(null);
-	  const [int2, setInt2] = react.exports.useState(null);
-	  const [ans, setAns] = react.exports.useState('');
-	  const [skipCount, setSkipCount] = react.exports.useState(0);
-	  react.exports.useEffect(() => generateQuestion(), []);
-
-	  const generateQuestion = () => {
-	    const operators = ["+", "-", "x", "/"];
-	    const noOfOperators = operators.length;
-	    const operatorindex = [Math.floor(Math.random() * (noOfOperators - 1))];
-	    setOperator(operators[operatorindex]);
-	    setInt1(Math.floor(Math.random() * 20));
-	    setInt2(Math.floor(Math.random() * 20));
-	  };
+	  const [gamesInSession, setGamesInSession] = react.exports.useState([]);
+	  const [ans, setAns] = react.exports.useState("");
+	  const [checkingAnswer, setCheckingAnswer] = react.exports.useState(false);
+	  const {
+	    nextExpression,
+	    skipsRemaining
+	  } = currentGame;
+	  const {
+	    lhs,
+	    rhs,
+	    operator
+	  } = nextExpression;
 
 	  const handleSkip = () => {
-	    setSkipCount(skipCount => skipCount + 1);
-	    setCount(count => count + 1);
-	    generateQuestion();
+	    calculateGame(true);
+	  };
 
-	    if (count == round) {
-	      setGameState(2);
+	  const playGame = e => {
+	    e.preventDefault();
+
+	    if (ans.length === nextExpression.correctAnswerLength) {
+	      calculateGame();
+	      setCheckingAnswer(true);
 	    }
 	  };
 
-	  const playGame = async e => {
-	    e.preventDefault();
-	    console.log('started');
-	    await fetch("http://localhost:8081/games/gameId/moves", {
+	  const calculateGame = async function () {
+	    let skip = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+	    const gameId = currentGame?.id; // console.log('started'); 
+
+	    await fetch(`http://localhost:8081/games/${gameId}/moves`, {
 	      method: 'POST',
 	      headers: {
 	        'Content-Type': 'application/json'
 	      },
 	      body: JSON.stringify({
-	        // id: 
-	        guess: "skip"
+	        guess: skip ? "skip" : ans
 	      })
-	    }).then(res => res.json()).then(data => console.log("Data", data)).catch(error => {
-	      console.log("error");
-	    }); //  const handleSubmit = () => {
-	    // setGameState(1);
-	    // setTime(Date.now());
-	    // setIsLoading(false);
-	    // let actualAnswer
-	    // if (operator == "+")
-	    //   actualAnswer = int1 + int2
-	    // if (operator == "-")
-	    //   actualAnswer = int1 - int2
-	    // if (operator == "x")
-	    //   actualAnswer = int1 * int2
-	    // if (operator == "/")
-	    //   actualAnswer = int1 / int2 
-	    //   if (actualAnswer.toString().length === ans.toString().length) {
-	    //     if(count < round){
-	    //       setDisplay(() => [...display, {
-	    //         int1: int1,
-	    //         int2: int2,
-	    //         actualAnswer: actualAnswer,
-	    //         operator: operator,
-	    //         ans: ans,
-	    //         timeTaken: Date.now()-time,
-	    //         speed: Math.round((Date.now()-time)/1000)
-	    //     }]);
-	    //       setAns('');
-	    //       setCount((count) => count + 1);
-	    //       generateQuestion();
-	    //   }else if (count == round) {
-	    //   setDisplay(() => [...display, {
-	    //       int1: int1,
-	    //       int2: int2,
-	    //       actualAnswer: actualAnswer,
-	    //       operator: operator,
-	    //       ans: ans,
-	    //       timeTaken: Date.now()-time,
-	    //       speed: Math.round((Date.now()-time)/1000)
-	    //   }]);
+	    }).then(res => res.json()).then(data => {
+	      const {
+	        game,
+	        move
+	      } = data;
 
-	    setGameState(2);
+	      const gameJustPlayed = _objectSpread2(_objectSpread2(_objectSpread2({}, currentGame), move), {}, {
+	        ans: ans
+	      });
+
+	      setGamesInSession(allPrevGamesInSession => [...allPrevGamesInSession, _objectSpread2({}, gameJustPlayed)]);
+	      const {
+	        nextExpression
+	      } = game;
+
+	      if (nextExpression) {
+	        setCurrentGame(game);
+	        setAns("");
+	        setCount(count => count + 1);
+	        setCheckingAnswer(false);
+	      } else {
+	        setAllGames(allPrevGames => [...allPrevGames, [...gamesInSession, gameJustPlayed]]);
+	        setGameState(2);
+	      }
+	    }).catch(error => {
+	      console.log(error);
+	    });
 	  };
 
 	  const goHome = () => {
+	    setAllGames([]);
 	    setGameState(0);
 	  };
 
@@ -34386,18 +34385,19 @@
 	    children: [/*#__PURE__*/jsxRuntime.exports.jsxs("form", {
 	      onSubmit: playGame,
 	      children: [/*#__PURE__*/jsxRuntime.exports.jsxs("h2", {
-	        children: [int1, " ", operator, " ", int2]
+	        children: [lhs, " ", operator, " ", rhs]
 	      }), /*#__PURE__*/jsxRuntime.exports.jsx("input", {
 	        autoFocus: true,
 	        value: ans,
 	        onChange: handleChange
 	      }), /*#__PURE__*/jsxRuntime.exports.jsx("button", {
 	        type: "submit",
-	        children: "Play"
-	      }), " ", /*#__PURE__*/jsxRuntime.exports.jsx("br", {}), skipCount < Math.floor(round / 3) ? /*#__PURE__*/jsxRuntime.exports.jsx("button", {
+	        disabled: checkingAnswer,
+	        children: checkingAnswer ? "Checking" : "Play"
+	      }), " ", /*#__PURE__*/jsxRuntime.exports.jsx("br", {}), Boolean(skipsRemaining) && /*#__PURE__*/jsxRuntime.exports.jsx("button", {
 	        onClick: handleSkip,
 	        children: "Skip"
-	      }) : '']
+	      })]
 	    }), /*#__PURE__*/jsxRuntime.exports.jsxs("p", {
 	      children: ["Rounds:", count]
 	    }), /*#__PURE__*/jsxRuntime.exports.jsx("button", {
@@ -36138,12 +36138,11 @@
        color: ${props => {
   const {
     speed,
-    actualAnswer,
-    ans
+    correct
   } = props;
   let textColor = "";
 
-  if (actualAnswer == ans) {
+  if (correct) {
     if (speed < 3) {
       textColor = "green";
     } else {
@@ -36159,21 +36158,23 @@
 
 	const Expressions = props => {
 	  const {
-	    int1,
-	    int2,
-	    operator,
-	    ans,
-	    timeTaken,
-	    actualAnswer,
-	    speed
+	    correct,
+	    timeSpentMillis,
+	    nextExpression,
+	    ans
 	  } = props;
+	  const {
+	    lhs,
+	    rhs,
+	    operator
+	  } = nextExpression;
+	  const speed = Math.round(timeSpentMillis / 1000);
 	  return /*#__PURE__*/jsxRuntime.exports.jsx("div", {
 	    children: /*#__PURE__*/jsxRuntime.exports.jsx(Style, {
-	      actualAnswer: actualAnswer,
-	      ans: ans,
+	      correct: correct,
 	      speed: speed,
 	      children: /*#__PURE__*/jsxRuntime.exports.jsxs("p", {
-	        children: [int1, " ", operator, " ", int2, " = ", ans, " [", timeTaken, "]"]
+	        children: [lhs, " ", operator, " ", rhs, " = ", ans, " [", timeSpentMillis, "]"]
 	      })
 	    })
 	  });
@@ -36183,35 +36184,36 @@
 	  const {
 	    count,
 	    setCount,
-	    time,
-	    setGameState,
 	    setRound,
-	    display,
-	    setDisplay,
-	    setTime,
-	    allGames,
-	    setAllGames
+	    setGameState,
+	    allGames
 	  } = props;
-	  const timeSpent = Date.now() - time;
 
-	  const handleClick = () => {
-	    setGameState(1);
+	  const startNewGame = () => {
+	    setGameState(0);
 	    setCount(1);
 	    setRound(count);
-	    setAllGames([...allGames, display]);
-	    setDisplay([]);
-	    setTime(Date.now());
 	  };
 
 	  return /*#__PURE__*/jsxRuntime.exports.jsxs("div", {
-	    children: [/*#__PURE__*/jsxRuntime.exports.jsx("p", {
+	    children: [allGames.map((gamesForSession, i) => {
+	      const timeSpent = gamesForSession.reduce((total, game) => total + game.timeSpentMillis, 0);
+	      return /*#__PURE__*/jsxRuntime.exports.jsxs("div", {
+	        className: "expressions-history",
+	        children: [/*#__PURE__*/jsxRuntime.exports.jsxs("h4", {
+	          children: ["Game ", i + 1]
+	        }), gamesForSession.map((game, i) => /*#__PURE__*/react.exports.createElement(Expressions, _objectSpread2(_objectSpread2({}, game), {}, {
+	          key: `game_in_session_${i}`
+	        }))), /*#__PURE__*/jsxRuntime.exports.jsxs("p", {
+	          id: "time_spent",
+	          children: ["you spent ", timeSpent, " ms. "]
+	        })]
+	      }, i);
+	    }), /*#__PURE__*/jsxRuntime.exports.jsx("p", {
 	      id: "game_over",
 	      children: "Game Over,"
-	    }), /*#__PURE__*/jsxRuntime.exports.jsxs("p", {
-	      id: "time_spent",
-	      children: ["you spent ", timeSpent, " ms. "]
 	    }), /*#__PURE__*/jsxRuntime.exports.jsx("button", {
-	      onClick: handleClick,
+	      onClick: startNewGame,
 	      children: "New Game"
 	    })]
 	  });
@@ -36224,9 +36226,6 @@
 	const changeGameState = newGameState => ({
 	  type: "changeGameState",
 	  payload: newGameState
-	});
-	const startTime = () => ({
-	  type: "startTime"
 	});
 	const init = () => ({
 	  round: 3,
@@ -36263,58 +36262,42 @@
 	};
 
 	const App = props => {
-	  const [count, setCount] = react.exports.useState(1);
-	  const [display, setDisplay] = react.exports.useState([]);
+	  const [count, setCount] = react.exports.useState(1); // const [display, setDisplay] = useState([]);
+
 	  const [allGames, setAllGames] = react.exports.useState([]);
 	  const [state, dispatch] = react.exports.useReducer(reducer, undefined, init);
+	  const [currentGame, setCurrentGame] = react.exports.useState({});
 
 	  const setRound = round => dispatch(selectRounds(round));
 
-	  const setGameState = gameState => dispatch(changeGameState(gameState));
+	  const setGameState = gameState => dispatch(changeGameState(gameState)); // const setTime = () => dispatch(startTime());
 
-	  const setTime = () => dispatch(startTime()); // const goToNextScreen = () => {
+
+	  console.log("All games", allGames); // const goToNextScreen = () => {
 	  //     setGameState((prevState) => prevState + 1)
 	  // };
 
-
 	  return /*#__PURE__*/jsxRuntime.exports.jsxs("div", {
-	    children: [state.gameState === 2 && allGames.map((game, i) => {
-	      return /*#__PURE__*/jsxRuntime.exports.jsxs("div", {
-	        className: "expressions-history",
-	        children: [/*#__PURE__*/jsxRuntime.exports.jsxs("h4", {
-	          children: ["Game ", i + 1]
-	        }), game.map(question => /*#__PURE__*/jsxRuntime.exports.jsx(Expressions, _objectSpread2({}, question)))]
-	      });
-	    }), /*#__PURE__*/jsxRuntime.exports.jsx("div", {
-	      className: "expressions-display",
-	      children: display.map(question => {
-	        return /*#__PURE__*/jsxRuntime.exports.jsx("div", {
-	          children: /*#__PURE__*/jsxRuntime.exports.jsx(Expressions, _objectSpread2({}, question))
-	        }, question.int1);
-	      })
-	    }), state.gameState === 0 && /*#__PURE__*/jsxRuntime.exports.jsx(StartScreen, {
+	    children: [state.gameState === 0 && /*#__PURE__*/jsxRuntime.exports.jsx(StartScreen, {
+	      allGames: allGames,
 	      setGameState: setGameState,
 	      round: state.round,
-	      setRound: setRound,
-	      setTime: setTime
+	      setRound: setRound // setTime={setTime}
+	      ,
+	      setCurrentGame: setCurrentGame
 	    }), state.gameState === 1 && /*#__PURE__*/jsxRuntime.exports.jsx(PlayScreen, {
-	      setGameState: setGameState,
 	      count: count,
-	      setCount: setCount,
-	      round: state.round,
-	      setRound: setRound,
-	      display: display,
-	      setDisplay: setDisplay
+	      setCount: setCount // round={state.round}
+	      ,
+	      setGameState: setGameState,
+	      currentGame: currentGame,
+	      setCurrentGame: setCurrentGame,
+	      setAllGames: setAllGames
 	    }), state.gameState === 2 && /*#__PURE__*/jsxRuntime.exports.jsx(EndScreen, {
-	      setGameState: setGameState,
 	      count: count,
 	      setCount: setCount,
-	      time: state.time,
-	      setTime: setTime,
-	      round: state.round,
 	      setRound: setRound,
-	      display: display,
-	      setDisplay: setDisplay,
+	      setGameState: setGameState,
 	      allGames: allGames,
 	      setAllGames: setAllGames
 	    })]
