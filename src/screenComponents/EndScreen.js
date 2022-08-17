@@ -3,12 +3,12 @@ import { Expressions } from './Expressions';
 
 
 export const EndScreen = (props) => {
-    const {  count, setCount, setRound, setGameState, allGames} = props;
+    const {  name, count, setCount, setRound, setGameState, allGames} = props;
   
     const startNewGame = () => {
       setGameState(0);
-      setCount(1);
-      setRound(count);
+    //   setCount(1);
+    //   setRound(count);
     }
 
 
@@ -22,7 +22,7 @@ export const EndScreen = (props) => {
                             {gamesForSession.map((game, i) => 
                             <Expressions {...game} key={`game_in_session_${i}`} />
                             )}
-                            <p id="time_spent">you spent {timeSpent} ms. </p>
+                            <p id="time_spent">{name} spent {timeSpent} ms. </p>
                         </div>
                     );
                 })}

@@ -1,31 +1,34 @@
 import { React, useState, useReducer } from 'react';
-import { StartScreen } from './components/StartScreen';
-import { PlayScreen } from './components/PlayScreen';
-import { EndScreen } from './components/EndScreen';
-import { Expressions } from './components/Expressions';
+import { StartScreen } from './screenComponents/StartScreen';
+import { PlayScreen } from './screenComponents/PlayScreen';
+import { EndScreen } from './screenComponents/EndScreen';
+
 import {
     reducer, 
     selectRounds,
     changeGameState,
-    startTime,
-    init
-} from "./reducermodule/reducer"
+    init,
+    changeCount,
+    changeName,
+    onOpen as open,
+    onConnecting as connecting,
+    onMessage as message,
+    onClose as onclose,
+    deleteFromOngoing as deleteOngoing
+} from "./reducermodule/appReducer"
 
 export const App = (props) => {
-    const [count, setCount] = useState(1);
-    // const [display, setDisplay] = useState([]);
     const [allGames, setAllGames] = useState([]);
     const [state, dispatch] = useReducer(reducer, undefined, init)
     const [currentGame, setCurrentGame] = useState({});
     const setRound = (round) => dispatch(selectRounds(round));
     const setGameState = (gameState) => dispatch(changeGameState(gameState));
-    // const setTime = () => dispatch(startTime());
-    
-
-    console.log("All games", allGames);
-    // const goToNextScreen = () => {
-    //     setGameState((prevState) => prevState + 1)
-    // };
+    const setCount = (newCount) => dispatch(changeCount(newCount));
+    const setName = (name) => dispatch(changeName(name));
+    const onOpen = () => dispatch(open());
+    const onConnecting = (websocketconnection) => dispatch(connecting(websocketconnection));
+    const onMessage = (parsedMessage) => dispatch(message(parsedMessage));
+    const onClose = (reason) => dispatch(onclose(reason))
 
     return (
         <div>
@@ -35,26 +38,35 @@ export const App = (props) => {
                     setGameState={setGameState} 
                     round={state.round} 
                     setRound={setRound} 
-                    // setTime={setTime}
                     setCurrentGame={setCurrentGame}
+                    name={state.name}
+                    setName={setName}
                 />
             )}
 
             {state.gameState === 1 && (
                 <PlayScreen 
-                    count = {count}
+                    count = {state.count}
                     setCount = {setCount}
+                    name = {state.name}
                     // round={state.round}
                     setGameState={setGameState}
                     currentGame={currentGame}
                     setCurrentGame={setCurrentGame}   
                     setAllGames={setAllGames}
+                    onOpen={onOpen}
+                    onClose={onClose}
+                    onConnecting={onConnecting}
+                    onMessage={onMessage}
+                    // connectWebSocket = {props.connectWebSocket}
+                    state={state}
                 />
             )}
         
             {state.gameState === 2 && (
                 <EndScreen
-                    count = {count}
+                    name = {state.name}
+                    count = {state.count}
                     setCount = {setCount} 
                     setRound = {setRound}
                     setGameState={setGameState}  

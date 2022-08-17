@@ -34162,6 +34162,8 @@
 
 	function StartScreen(props) {
 	  const {
+	    name,
+	    setName,
 	    round,
 	    setRound,
 	    setGameState,
@@ -34216,6 +34218,10 @@
 	    setRound(newRound);
 	  };
 
+	  const handleNameChange = e => {
+	    setName(e.target.value);
+	  };
+
 	  return /*#__PURE__*/jsxRuntime.exports.jsx(jsxRuntime.exports.Fragment, {
 	    children: CONTAINS_GAMES ? /*#__PURE__*/jsxRuntime.exports.jsx(jsxRuntime.exports.Fragment, {}) : /*#__PURE__*/jsxRuntime.exports.jsxs("div", {
 	      children: [/*#__PURE__*/jsxRuntime.exports.jsxs("h1", {
@@ -34227,9 +34233,16 @@
 	        }), /*#__PURE__*/jsxRuntime.exports.jsx("p", {
 	          children: failure && "oopsies"
 	        })]
-	      }), /*#__PURE__*/jsxRuntime.exports.jsx("div", {
+	      }), /*#__PURE__*/jsxRuntime.exports.jsxs("div", {
 	        className: "rounds",
-	        children: /*#__PURE__*/jsxRuntime.exports.jsxs("form", {
+	        children: [/*#__PURE__*/jsxRuntime.exports.jsx("label", {
+	          children: "Name: "
+	        }), /*#__PURE__*/jsxRuntime.exports.jsx("input", {
+	          type: "text",
+	          id: "nameInput",
+	          value: name,
+	          onChange: handleNameChange
+	        }), /*#__PURE__*/jsxRuntime.exports.jsxs("form", {
 	          onSubmit: startGame,
 	          children: [/*#__PURE__*/jsxRuntime.exports.jsx("label", {
 	            children: "Select number of rounds:"
@@ -34248,7 +34261,7 @@
 	            disabled: isLoading,
 	            children: isLoading ? "loading..." : "Start Game"
 	          })]
-	        })
+	        })]
 	      })]
 	    })
 	  });
@@ -34295,6 +34308,91 @@
 	  return obj;
 	}
 
+	const websocketConf = {
+	  port: 8081,
+	  host: "localhost"
+	}; // Helper function to create a standard query string from a parameter object
+	// Note that URLSearchParams is not supported in older browsers and may need to
+	// be polyfilled
+	// https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams
+
+	const objectToQueryString = obj => {
+	  const params = new URLSearchParams();
+	  Object.getOwnPropertyNames(obj).forEach(propName => {
+	    params.append(propName, obj[propName]);
+	  });
+	  return params.toString();
+	};
+	/**
+	 * Thin wrapper around the native WebSocket object which deals with opening the
+	 * connection and parsing incoming messages.
+	 *
+	 * @param {object} parameters Parameters for the connection
+	 * @param {function} onOpen Called when the connection opens
+	 * @param {function} onClose Called when the connection closes
+	 * @param {function} onMessage Called with a parsed message whenever a message is received
+	 *
+	 * @return {object} Object with
+	 *   function `close` that closes the websocket connection
+	 */
+
+
+	const connect = _ref => {
+	  let {
+	    onOpen,
+	    onClose,
+	    onMessage,
+	    parameters = {}
+	  } = _ref;
+	  // `ws` signifies the websocket protocol
+	  // `wss` would be secure websocket protocol (like https)
+	  const websocketConnection = new WebSocket(`ws://${websocketConf.host}:${websocketConf.port}/?${objectToQueryString(parameters)}`);
+
+	  websocketConnection.onopen = () => onOpen();
+
+	  websocketConnection.onclose = event => {
+	    // WebSocket might be disconnected by a server with a specific reason
+	    const reason = event.reason;
+	    onClose({
+	      reason
+	    });
+	  };
+
+	  websocketConnection.onmessage = messageEvent => {
+	    // In this example `data` is JSON encoded in an UTF-8 String
+	    const payload = messageEvent.data;
+	    let parsedMessage;
+
+	    try {
+	      parsedMessage = JSON.parse(payload);
+	    } catch (error) {
+	      console.error("error parsing websocket message", error, payload); // eslint-disable-line no-console
+
+	      return;
+	    }
+
+	    onMessage(parsedMessage);
+	  };
+	  /*
+	   * Although the WebSocket object has a `send` method, it is important to very
+	   * carefully consider using it when there is an HTTP API present as well.
+	   * It is generally a very bad idea to use different transports -
+	   * websocket.send and HTTP requests - to implement application logic as it
+	   * leads to a wide array of race conditions.
+	   *
+	   * Usually only "protocol" type messages should be sent via the WebSocket connection.
+	   */
+
+
+	  const close = () => {
+	    websocketConnection.close();
+	  };
+
+	  return {
+	    close
+	  };
+	};
+
 	const PlayScreen = props => {
 	  const {
 	    count,
@@ -34302,8 +34400,27 @@
 	    setGameState,
 	    currentGame,
 	    setCurrentGame,
-	    setAllGames
+	    setAllGames,
+	    name,
+	    state,
+	    onOpen,
+	    onClose,
+	    onConnecting,
+	    onMessage
 	  } = props;
+	  const connectWebSocket = props.connectWebSocket || connect;
+	  react.exports.useEffect(() => {
+	    const websocketconnection = connectWebSocket({
+	      onOpen,
+	      onClose,
+	      onMessage,
+	      parameters: {
+	        playerName: name
+	      }
+	    });
+	    onConnecting(websocketconnection);
+	    return () => websocketconnection.close();
+	  }, []);
 	  const [gamesInSession, setGamesInSession] = react.exports.useState([]);
 	  const [ans, setAns] = react.exports.useState("");
 	  const [checkingAnswer, setCheckingAnswer] = react.exports.useState(false);
@@ -34380,9 +34497,30 @@
 	    setAns(e.target.value);
 	  };
 
+	  const handleDisconnect = async () => {
+	    state.webSocketConnection.close(); // deleteFromOngoing(state.id);
+	  };
+
 	  return /*#__PURE__*/jsxRuntime.exports.jsxs("div", {
 	    className: "gameplay",
-	    children: [/*#__PURE__*/jsxRuntime.exports.jsxs("form", {
+	    children: [!state.connectionError ? /*#__PURE__*/jsxRuntime.exports.jsx("button", {
+	      onClick: handleDisconnect,
+	      children: state.connecting ? /*#__PURE__*/jsxRuntime.exports.jsx("span", {
+	        children: "connecting..."
+	      }) : /*#__PURE__*/jsxRuntime.exports.jsx("span", {
+	        children: "disconnect"
+	      })
+	    }) : connectionError.reason === 'player-name-taken' ? /*#__PURE__*/jsxRuntime.exports.jsx("span", {
+	      children: "Player Name Taken"
+	    }) : null, state.data.map(key => {
+	      return /*#__PURE__*/jsxRuntime.exports.jsxs("p", {
+	        children: [/*#__PURE__*/jsxRuntime.exports.jsx("span", {
+	          children: key.name
+	        }), key.id === state.playerId ? /*#__PURE__*/jsxRuntime.exports.jsx("span", {
+	          children: "(you)"
+	        }) : null]
+	      });
+	    }), /*#__PURE__*/jsxRuntime.exports.jsxs("form", {
 	      onSubmit: playGame,
 	      children: [/*#__PURE__*/jsxRuntime.exports.jsxs("h2", {
 	        children: [lhs, " ", operator, " ", rhs]
@@ -36182,6 +36320,7 @@
 
 	const EndScreen = props => {
 	  const {
+	    name,
 	    count,
 	    setCount,
 	    setRound,
@@ -36190,9 +36329,8 @@
 	  } = props;
 
 	  const startNewGame = () => {
-	    setGameState(0);
-	    setCount(1);
-	    setRound(count);
+	    setGameState(0); //   setCount(1);
+	    //   setRound(count);
 	  };
 
 	  return /*#__PURE__*/jsxRuntime.exports.jsxs("div", {
@@ -36206,7 +36344,7 @@
 	          key: `game_in_session_${i}`
 	        }))), /*#__PURE__*/jsxRuntime.exports.jsxs("p", {
 	          id: "time_spent",
-	          children: ["you spent ", timeSpent, " ms. "]
+	          children: [name, " spent ", timeSpent, " ms. "]
 	        })]
 	      }, i);
 	    }), /*#__PURE__*/jsxRuntime.exports.jsx("p", {
@@ -36219,6 +36357,95 @@
 	  });
 	};
 
+	const init = () => ({
+	  round: 3,
+	  gameState: 0,
+	  count: 1,
+	  // allGames:[]
+	  name: "",
+	  connecting: false,
+	  connected: false,
+	  connectionError: null,
+	  id: null,
+	  webSocketConnection: null,
+	  data: []
+	});
+
+	const messageReceived = (state, parsedMessage) => {
+	  // parsed message is an object of the format {eventName: String, payload: Object}
+	  if (parsedMessage.eventName === 'online-players') {
+	    return _objectSpread2(_objectSpread2({}, state), {}, {
+	      data: parsedMessage.payload
+	    });
+	  } else {
+	    return _objectSpread2(_objectSpread2({}, state), {}, {
+	      playerId: parsedMessage.payload.playerId
+	    });
+	  }
+	}; // const deleteOngoing = (state, gameId) => {
+	//     const current = state.ongoing;
+	//     delete current[gameId];
+	//     return {
+	//         ...state, 
+	//         ongoing: current
+	//     };
+	// };
+
+
+	const reducer = (state, action) => {
+	  switch (action.type) {
+	    case "selectRounds":
+	      return _objectSpread2(_objectSpread2({}, state), {}, {
+	        round: action.payload
+	      });
+
+	    case "changeGameState":
+	      return _objectSpread2(_objectSpread2({}, state), {}, {
+	        gameState: action.payload
+	      });
+
+	    case "changeCount":
+	      return _objectSpread2(_objectSpread2({}, state), {}, {
+	        count: state.count + 1
+	      });
+
+	    case "changeName":
+	      return _objectSpread2(_objectSpread2({}, state), {}, {
+	        name: action.payload
+	      });
+
+	    case "CONNECTING":
+	      return _objectSpread2(_objectSpread2({}, state), {}, {
+	        connecting: true,
+	        connected: false,
+	        webSocketConnection: action.payload,
+	        connectionError: null
+	      });
+
+	    case "CONNECTED":
+	      return _objectSpread2(_objectSpread2({}, state), {}, {
+	        connecting: false,
+	        connected: true,
+	        connectionError: null
+	      });
+
+	    case "DISCONNECTED":
+	      return _objectSpread2(_objectSpread2({}, state), {}, {
+	        connecting: false,
+	        connected: false,
+	        connectionError: action.payload.reason
+	      });
+
+	    case "MESSAGE_RECEIVED":
+	      return messageReceived(state, action.payload);
+
+	    case "deleteFromOngoing":
+	      return deleteOngoing(state, action.payload);
+
+	    default:
+	      throw new Error("Invalid reducers reducer usage");
+	  }
+	};
 	const selectRounds = newRound => ({
 	  type: "selectRounds",
 	  payload: newRound
@@ -36227,74 +36454,80 @@
 	  type: "changeGameState",
 	  payload: newGameState
 	});
-	const init = () => ({
-	  round: 3,
-	  gameState: 0,
-	  time: null
+	const changeCount = newCount => ({
+	  type: "changeCount",
+	  payload: newCount
 	});
-
-	const setRound = (state, newRound) => _objectSpread2(_objectSpread2({}, state), {}, {
-	  round: newRound
+	const changeName = name => ({
+	  type: "changeName",
+	  payload: name
 	});
-
-	const setGameState = (state, newGameState) => _objectSpread2(_objectSpread2({}, state), {}, {
-	  gameState: newGameState
+	const onOpen = () => ({
+	  type: "CONNECTED",
+	  payload: null
 	});
-
-	const setTime = state => _objectSpread2(_objectSpread2({}, state), {}, {
-	  time: Date.now()
+	const onConnecting = websocketConnection => ({
+	  type: "CONNECTING",
+	  payload: websocketConnection
 	});
+	const onMessage = parsedMessage => ({
+	  type: "MESSAGE_RECEIVED",
+	  payload: parsedMessage
+	}); // note that reason is an object of format {reason: string}
 
-	const reducer = (state, action) => {
-	  switch (action.type) {
-	    case "selectRounds":
-	      return setRound(state, action.payload);
-
-	    case "changeGameState":
-	      return setGameState(state, action.payload);
-
-	    case "startTime":
-	      return setTime(state);
-
-	    default:
-	      throw new Error("Invalid reducers reducer usage");
-	  }
-	};
+	const onClose = reason => ({
+	  type: "DISCONNECTED",
+	  payload: reason
+	});
 
 	const App = props => {
-	  const [count, setCount] = react.exports.useState(1); // const [display, setDisplay] = useState([]);
-
 	  const [allGames, setAllGames] = react.exports.useState([]);
 	  const [state, dispatch] = react.exports.useReducer(reducer, undefined, init);
 	  const [currentGame, setCurrentGame] = react.exports.useState({});
 
 	  const setRound = round => dispatch(selectRounds(round));
 
-	  const setGameState = gameState => dispatch(changeGameState(gameState)); // const setTime = () => dispatch(startTime());
+	  const setGameState = gameState => dispatch(changeGameState(gameState));
 
+	  const setCount = newCount => dispatch(changeCount(newCount));
 
-	  console.log("All games", allGames); // const goToNextScreen = () => {
-	  //     setGameState((prevState) => prevState + 1)
-	  // };
+	  const setName = name => dispatch(changeName(name));
+
+	  const onOpen$1 = () => dispatch(onOpen());
+
+	  const onConnecting$1 = websocketconnection => dispatch(onConnecting(websocketconnection));
+
+	  const onMessage$1 = parsedMessage => dispatch(onMessage(parsedMessage));
+
+	  const onClose$1 = reason => dispatch(onClose(reason));
 
 	  return /*#__PURE__*/jsxRuntime.exports.jsxs("div", {
 	    children: [state.gameState === 0 && /*#__PURE__*/jsxRuntime.exports.jsx(StartScreen, {
 	      allGames: allGames,
 	      setGameState: setGameState,
 	      round: state.round,
-	      setRound: setRound // setTime={setTime}
-	      ,
-	      setCurrentGame: setCurrentGame
+	      setRound: setRound,
+	      setCurrentGame: setCurrentGame,
+	      name: state.name,
+	      setName: setName
 	    }), state.gameState === 1 && /*#__PURE__*/jsxRuntime.exports.jsx(PlayScreen, {
-	      count: count,
-	      setCount: setCount // round={state.round}
+	      count: state.count,
+	      setCount: setCount,
+	      name: state.name // round={state.round}
 	      ,
 	      setGameState: setGameState,
 	      currentGame: currentGame,
 	      setCurrentGame: setCurrentGame,
-	      setAllGames: setAllGames
+	      setAllGames: setAllGames,
+	      onOpen: onOpen$1,
+	      onClose: onClose$1,
+	      onConnecting: onConnecting$1,
+	      onMessage: onMessage$1 // connectWebSocket = {props.connectWebSocket}
+	      ,
+	      state: state
 	    }), state.gameState === 2 && /*#__PURE__*/jsxRuntime.exports.jsx(EndScreen, {
-	      count: count,
+	      name: state.name,
+	      count: state.count,
 	      setCount: setCount,
 	      setRound: setRound,
 	      setGameState: setGameState,

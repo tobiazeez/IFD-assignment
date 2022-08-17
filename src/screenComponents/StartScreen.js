@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 
 export function StartScreen(props) {
-    const {round, setRound, setGameState, setCurrentGame, allGames} = props;
+    const {name, setName, round, setRound, setGameState, setCurrentGame, allGames} = props;
     const [isLoading, setIsLoading] = useState(false)
     const [requestStatus, setRequestStatus] = useState("");
 
@@ -52,6 +52,9 @@ export function StartScreen(props) {
           setRound(newRound);
        };
 
+    const handleNameChange=(e) =>{
+        setName(e.target.value);
+    };
      
 
   return (
@@ -70,6 +73,8 @@ export function StartScreen(props) {
         </div>
       )}
      <div className='rounds'>
+      <label>Name: </label>
+        <input type="text" id="nameInput" value={name} onChange={handleNameChange}></input>
       <form onSubmit={startGame}>
          <label>Select number of rounds:</label>
           <input autoFocus value={round} onChange={handleChange} type='number' id='rounds-input' min="1" max="20" required/>
