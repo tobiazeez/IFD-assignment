@@ -1,9 +1,14 @@
 import React from 'react';
 import { Expressions } from './Expressions';
+import { useGlobalState } from "../StateContext";
 
 
 export const EndScreen = (props) => {
-    const {  name, count, setCount, setRound, setGameState, allGames} = props;
+    const stateManager = useGlobalState();
+    const { state, setRound, setCount, setGameState } = stateManager;
+    const { count, name } = state;
+
+    const { allGames} = props;
   
     const startNewGame = () => {
       setGameState(0);

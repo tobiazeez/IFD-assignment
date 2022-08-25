@@ -1,15 +1,24 @@
 import React from "react"
-import {useState, useEffect} from "react";
+import {useState, useEffect, useContext} from "react";
 import { connect as defaultConnectWebSocket} from "../WebSocket";
+import { useGlobalState } from "../StateContext";
  
 
 export const PlayScreen = (props) => {
-    const { count, setCount, setGameState, currentGame, setCurrentGame, setAllGames, name, state, onOpen, onClose, onConnecting, onMessage, } = props;
+    const {currentGame, setCurrentGame, setAllGames} = props;
+    const stateManager = useGlobalState();
+    const { onOpen, setName, setCount, setRound, onConnecting, onMessage, onClose, state, setGameState } = stateManager;
+    const { count, name, connectionError } = state;
+
     const connectWebSocket = props.connectWebSocket || defaultConnectWebSocket;
 
     useEffect(() => {
-      const websocketconnection = 
-      (connectWebSocket)({onOpen, onClose, onMessage, parameters: {playerName: name}});
+      const websocketconnection = connectWebSocket({
+        onOpen, 
+        onClose, 
+        onMessage,
+        parameters: {playerName: name}
+      });
       onConnecting(websocketconnection);
       return () => websocketconnection.close();
   }, []);
@@ -27,7 +36,7 @@ export const PlayScreen = (props) => {
 
       const playGame = (e) => {
         e.preventDefault();
-        if (ans.length === nextExpression.correctAnswerLength){
+        if (ans.length === nextExpression.correctAnswerLength ){
            calculateGame();
            setCheckingAnswer(true)
         }
@@ -78,7 +87,10 @@ export const PlayScreen = (props) => {
 
       const goHome = () => {
         setAllGames([])
+        setCurrentGame([]);
         setGameState(0)
+        setCount(1);
+        setRound(count)
       }
 
       const handleChange = (e) => {
@@ -86,36 +98,50 @@ export const PlayScreen = (props) => {
       }
       
       const handleDisconnect = async () => {  
-       
         state.webSocketConnection.close();
-       
-        // deleteFromOngoing(state.id);
+        goHome();
+        setName('');
+        setCount(1);
+        setRound(count);
     };
     
-    return (
+  return (
+    <>
+    {connectionError ? 
+      <div>
+    <span>Player Name Taken</span> 
+    <button id="start" type="button" onClick={goHome}>Home</button>
+    </div> :
+    (
       <div className="gameplay">
-           {!state.connectionError ? <button onClick = {handleDisconnect}>
-                 { state.connecting ? <span>connecting...</span> : <span>disconnect</span> }
-             </button> : connectionError.reason === 'player-name-taken'? <span>Player Name Taken</span> : null}
-             {state.data.map((key) => {
-                     return (
-                         <p>
-                             <span>{key.name}</span>
-                             { key.id === state.playerId ? <span>(you)</span> : null}
-                         </p>
-
- 
-                      );
-                 })}
-      <form onSubmit={playGame}>
+        {!state.connectionError ? (
+          <button onClick={handleDisconnect}>
+            {state.connecting ? <span>connecting...</span> : <span>disconnect</span>}
+             </button> 
+         ) 
+        // : connectionError.reason === 'player-name-taken' ? 
+        //   (// <span>Player Name Taken</span>
+        //   setGameState(0)
+        //  
+        : null}
+       {console.log(state)}
+       {state.data.map((key) => {
+          return (
+            <p>
+              <span>{key.name}</span>
+                { key.id === state.playerId ? <span>(you)</span> : null}
+            </p>
+          );
+        })}
+        <form onSubmit={playGame}>
              <h2>{lhs} {operator} {rhs}</h2>
              <input autoFocus value={ans} onChange={handleChange}/>
              <button type="submit"  disabled={checkingAnswer}>{checkingAnswer? "Checking":"Play"}</button> <br></br> 
             {Boolean(skipsRemaining) && <button onClick={handleSkip}>Skip</button>}   
-       </form> 
+        </form> 
        <p>Rounds:{count}</p>
        <button id="start" type="button" onClick={goHome}>Home</button>
-       </div>
-   )
-   
+       </div>)}
+    </>
+  )
 }

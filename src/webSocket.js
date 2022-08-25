@@ -27,6 +27,7 @@ const websocketConf = {
    * @return {object} Object with
    *   function `close` that closes the websocket connection
    */
+ 
   export const connect = ({ onOpen, onClose, onMessage, parameters = {} }) => {
     // `ws` signifies the websocket protocol
     // `wss` would be secure websocket protocol (like https)
@@ -40,6 +41,7 @@ const websocketConf = {
 
     websocketConnection.onclose = (event) => {
       // WebSocket might be disconnected by a server with a specific reason
+      console.log("After closing", event)
       const reason = event.reason;
       onClose({ reason });
     };
@@ -54,7 +56,7 @@ const websocketConf = {
         console.error("error parsing websocket message", error, payload); // eslint-disable-line no-console
         return;
       }
-
+      console.log("Message received", parsedMessage)
       onMessage(parsedMessage);
     };
 

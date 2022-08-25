@@ -9,7 +9,7 @@ export const init = () => ({
     connectionError: null,
     id: null,
     webSocketConnection: null,
-    data: []
+    data: [],
 });
 
 const messageReceived = (state, parsedMessage) => {
@@ -26,14 +26,6 @@ const messageReceived = (state, parsedMessage) => {
         };
     }
 };
-// const deleteOngoing = (state, gameId) => {
-//     const current = state.ongoing;
-//     delete current[gameId];
-//     return {
-//         ...state, 
-//         ongoing: current
-//     };
-// };
 
 export const reducer = (state, action) => {
     switch (action.type) {
@@ -61,16 +53,9 @@ export const reducer = (state, action) => {
                 connectionError: null
             };
         case "DISCONNECTED":
-            return {
-                ...state,
-                connecting: false,
-                connected: false,
-                connectionError: action.payload.reason,
-            };
+            return {...state, connecting: false, connected: false, connectionError: action.payload};
         case "MESSAGE_RECEIVED":
             return messageReceived(state, action.payload);
-        case "deleteFromOngoing":
-                return deleteOngoing(state, action.payload);
         default:
             throw new Error("Invalid reducers reducer usage");
     }
@@ -97,28 +82,25 @@ export const changeName = (name) => ({
     payload: name
 });
 
-export const onOpen = () => ({
+export const onWebsocketOpen = () => ({
     type: "CONNECTED",
     payload: null
 });
 
- export const onConnecting = (websocketConnection) => ({
+ export const onWebsocketConnecting = (websocketConnection) => ({
     type: "CONNECTING",
     payload: websocketConnection
 });
 
- export const onMessage = (parsedMessage) => ({
+ export const onWebsocketMessage = (parsedMessage) => ({
     type: "MESSAGE_RECEIVED",
     payload: parsedMessage
 });
 // note that reason is an object of format {reason: string}
-export const onClose = (reason) => ({
+export const onWebsocketClose = ( reason ) => ({
     type: "DISCONNECTED",
     payload: reason
 });
 
- export const deleteFromOngoing = (gameId) => ({
-    type: "deleteFromOngoing",
-    payload: gameId
-});
+
 

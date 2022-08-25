@@ -32860,6 +32860,159 @@
 	  };
 	}
 
+	function ownKeys(object, enumerableOnly) {
+	  var keys = Object.keys(object);
+
+	  if (Object.getOwnPropertySymbols) {
+	    var symbols = Object.getOwnPropertySymbols(object);
+	    enumerableOnly && (symbols = symbols.filter(function (sym) {
+	      return Object.getOwnPropertyDescriptor(object, sym).enumerable;
+	    })), keys.push.apply(keys, symbols);
+	  }
+
+	  return keys;
+	}
+
+	function _objectSpread2(target) {
+	  for (var i = 1; i < arguments.length; i++) {
+	    var source = null != arguments[i] ? arguments[i] : {};
+	    i % 2 ? ownKeys(Object(source), !0).forEach(function (key) {
+	      _defineProperty(target, key, source[key]);
+	    }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) {
+	      Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
+	    });
+	  }
+
+	  return target;
+	}
+
+	function _defineProperty(obj, key, value) {
+	  if (key in obj) {
+	    Object.defineProperty(obj, key, {
+	      value: value,
+	      enumerable: true,
+	      configurable: true,
+	      writable: true
+	    });
+	  } else {
+	    obj[key] = value;
+	  }
+
+	  return obj;
+	}
+
+	const init = () => ({
+	  round: 3,
+	  gameState: 0,
+	  count: 1,
+	  // allGames:[]
+	  name: "",
+	  connecting: false,
+	  connected: false,
+	  connectionError: null,
+	  id: null,
+	  webSocketConnection: null,
+	  data: []
+	});
+
+	const messageReceived = (state, parsedMessage) => {
+	  // parsed message is an object of the format {eventName: String, payload: Object}
+	  if (parsedMessage.eventName === 'online-players') {
+	    return _objectSpread2(_objectSpread2({}, state), {}, {
+	      data: parsedMessage.payload
+	    });
+	  } else {
+	    return _objectSpread2(_objectSpread2({}, state), {}, {
+	      playerId: parsedMessage.payload.playerId
+	    });
+	  }
+	};
+
+	const reducer = (state, action) => {
+	  switch (action.type) {
+	    case "selectRounds":
+	      return _objectSpread2(_objectSpread2({}, state), {}, {
+	        round: action.payload
+	      });
+
+	    case "changeGameState":
+	      return _objectSpread2(_objectSpread2({}, state), {}, {
+	        gameState: action.payload
+	      });
+
+	    case "changeCount":
+	      return _objectSpread2(_objectSpread2({}, state), {}, {
+	        count: state.count + 1
+	      });
+
+	    case "changeName":
+	      return _objectSpread2(_objectSpread2({}, state), {}, {
+	        name: action.payload
+	      });
+
+	    case "CONNECTING":
+	      return _objectSpread2(_objectSpread2({}, state), {}, {
+	        connecting: true,
+	        connected: false,
+	        webSocketConnection: action.payload,
+	        connectionError: null
+	      });
+
+	    case "CONNECTED":
+	      return _objectSpread2(_objectSpread2({}, state), {}, {
+	        connecting: false,
+	        connected: true,
+	        connectionError: null
+	      });
+
+	    case "DISCONNECTED":
+	      return _objectSpread2(_objectSpread2({}, state), {}, {
+	        connecting: false,
+	        connected: false,
+	        connectionError: action.payload
+	      });
+
+	    case "MESSAGE_RECEIVED":
+	      return messageReceived(state, action.payload);
+
+	    default:
+	      throw new Error("Invalid reducers reducer usage");
+	  }
+	};
+	const selectRounds = newRound => ({
+	  type: "selectRounds",
+	  payload: newRound
+	});
+	const changeGameState = newGameState => ({
+	  type: "changeGameState",
+	  payload: newGameState
+	});
+	const changeCount = newCount => ({
+	  type: "changeCount",
+	  payload: newCount
+	});
+	const changeName = name => ({
+	  type: "changeName",
+	  payload: name
+	});
+	const onWebsocketOpen = () => ({
+	  type: "CONNECTED",
+	  payload: null
+	});
+	const onWebsocketConnecting = websocketConnection => ({
+	  type: "CONNECTING",
+	  payload: websocketConnection
+	});
+	const onWebsocketMessage = parsedMessage => ({
+	  type: "MESSAGE_RECEIVED",
+	  payload: parsedMessage
+	}); // note that reason is an object of format {reason: string}
+
+	const onWebsocketClose = reason => ({
+	  type: "DISCONNECTED",
+	  payload: reason
+	});
+
 	var jsxRuntime = {exports: {}};
 
 	var reactJsxRuntime_development = {};
@@ -34160,13 +34313,60 @@
 	  }
 	})(jsxRuntime);
 
-	function StartScreen(props) {
-	  const {
-	    name,
+	const StateContext = /*#__PURE__*/react.exports.createContext();
+	const useGlobalState = () => react.exports.useContext(StateContext);
+	const StateProvider = _ref => {
+	  let {
+	    children
+	  } = _ref;
+	  const [state, dispatch] = react.exports.useReducer(reducer, undefined, init);
+
+	  const setRound = round => dispatch(selectRounds(round));
+
+	  const setGameState = gameState => dispatch(changeGameState(gameState));
+
+	  const setCount = newCount => dispatch(changeCount(newCount));
+
+	  const setName = name => dispatch(changeName(name));
+
+	  const onOpen = () => dispatch(onWebsocketOpen());
+
+	  const onConnecting = websocketconnection => dispatch(onWebsocketConnecting(websocketconnection));
+
+	  const onMessage = parsedMessage => dispatch(onWebsocketMessage(parsedMessage));
+
+	  const onClose = reason => dispatch(onWebsocketClose(reason));
+
+	  const stateManager = {
+	    state,
+	    setRound,
+	    setCount,
 	    setName,
-	    round,
+	    setGameState,
+	    onOpen,
+	    onConnecting,
+	    onMessage,
+	    onClose
+	  };
+	  return /*#__PURE__*/jsxRuntime.exports.jsx(StateContext.Provider, {
+	    value: stateManager,
+	    children: children
+	  });
+	};
+
+	function StartScreen(props) {
+	  const stateManager = useGlobalState();
+	  const {
+	    state,
 	    setRound,
 	    setGameState,
+	    setName
+	  } = stateManager;
+	  const {
+	    round,
+	    name
+	  } = state;
+	  const {
 	    setCurrentGame,
 	    allGames
 	  } = props;
@@ -34267,47 +34467,6 @@
 	  });
 	}
 
-	function ownKeys(object, enumerableOnly) {
-	  var keys = Object.keys(object);
-
-	  if (Object.getOwnPropertySymbols) {
-	    var symbols = Object.getOwnPropertySymbols(object);
-	    enumerableOnly && (symbols = symbols.filter(function (sym) {
-	      return Object.getOwnPropertyDescriptor(object, sym).enumerable;
-	    })), keys.push.apply(keys, symbols);
-	  }
-
-	  return keys;
-	}
-
-	function _objectSpread2(target) {
-	  for (var i = 1; i < arguments.length; i++) {
-	    var source = null != arguments[i] ? arguments[i] : {};
-	    i % 2 ? ownKeys(Object(source), !0).forEach(function (key) {
-	      _defineProperty(target, key, source[key]);
-	    }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) {
-	      Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
-	    });
-	  }
-
-	  return target;
-	}
-
-	function _defineProperty(obj, key, value) {
-	  if (key in obj) {
-	    Object.defineProperty(obj, key, {
-	      value: value,
-	      enumerable: true,
-	      configurable: true,
-	      writable: true
-	    });
-	  } else {
-	    obj[key] = value;
-	  }
-
-	  return obj;
-	}
-
 	const websocketConf = {
 	  port: 8081,
 	  host: "localhost"
@@ -34352,6 +34511,7 @@
 
 	  websocketConnection.onclose = event => {
 	    // WebSocket might be disconnected by a server with a specific reason
+	    console.log("After closing", event);
 	    const reason = event.reason;
 	    onClose({
 	      reason
@@ -34371,6 +34531,7 @@
 	      return;
 	    }
 
+	    console.log("Message received", parsedMessage);
 	    onMessage(parsedMessage);
 	  };
 	  /*
@@ -34395,19 +34556,27 @@
 
 	const PlayScreen = props => {
 	  const {
-	    count,
-	    setCount,
-	    setGameState,
 	    currentGame,
 	    setCurrentGame,
-	    setAllGames,
-	    name,
-	    state,
-	    onOpen,
-	    onClose,
-	    onConnecting,
-	    onMessage
+	    setAllGames
 	  } = props;
+	  const stateManager = useGlobalState();
+	  const {
+	    onOpen,
+	    setName,
+	    setCount,
+	    setRound,
+	    onConnecting,
+	    onMessage,
+	    onClose,
+	    state,
+	    setGameState
+	  } = stateManager;
+	  const {
+	    count,
+	    name,
+	    connectionError
+	  } = state;
 	  const connectWebSocket = props.connectWebSocket || connect;
 	  react.exports.useEffect(() => {
 	    const websocketconnection = connectWebSocket({
@@ -34490,7 +34659,10 @@
 
 	  const goHome = () => {
 	    setAllGames([]);
+	    setCurrentGame([]);
 	    setGameState(0);
+	    setCount(1);
+	    setRound(count);
 	  };
 
 	  const handleChange = e => {
@@ -34498,52 +34670,69 @@
 	  };
 
 	  const handleDisconnect = async () => {
-	    state.webSocketConnection.close(); // deleteFromOngoing(state.id);
+	    state.webSocketConnection.close();
+	    goHome();
+	    setName('');
+	    setCount(1);
+	    setRound(count);
 	  };
 
-	  return /*#__PURE__*/jsxRuntime.exports.jsxs("div", {
-	    className: "gameplay",
-	    children: [!state.connectionError ? /*#__PURE__*/jsxRuntime.exports.jsx("button", {
-	      onClick: handleDisconnect,
-	      children: state.connecting ? /*#__PURE__*/jsxRuntime.exports.jsx("span", {
-	        children: "connecting..."
-	      }) : /*#__PURE__*/jsxRuntime.exports.jsx("span", {
-	        children: "disconnect"
-	      })
-	    }) : connectionError.reason === 'player-name-taken' ? /*#__PURE__*/jsxRuntime.exports.jsx("span", {
-	      children: "Player Name Taken"
-	    }) : null, state.data.map(key => {
-	      return /*#__PURE__*/jsxRuntime.exports.jsxs("p", {
-	        children: [/*#__PURE__*/jsxRuntime.exports.jsx("span", {
-	          children: key.name
-	        }), key.id === state.playerId ? /*#__PURE__*/jsxRuntime.exports.jsx("span", {
-	          children: "(you)"
-	        }) : null]
-	      });
-	    }), /*#__PURE__*/jsxRuntime.exports.jsxs("form", {
-	      onSubmit: playGame,
-	      children: [/*#__PURE__*/jsxRuntime.exports.jsxs("h2", {
-	        children: [lhs, " ", operator, " ", rhs]
-	      }), /*#__PURE__*/jsxRuntime.exports.jsx("input", {
-	        autoFocus: true,
-	        value: ans,
-	        onChange: handleChange
+	  return /*#__PURE__*/jsxRuntime.exports.jsx(jsxRuntime.exports.Fragment, {
+	    children: connectionError ? /*#__PURE__*/jsxRuntime.exports.jsxs("div", {
+	      children: [/*#__PURE__*/jsxRuntime.exports.jsx("span", {
+	        children: "Player Name Taken"
 	      }), /*#__PURE__*/jsxRuntime.exports.jsx("button", {
-	        type: "submit",
-	        disabled: checkingAnswer,
-	        children: checkingAnswer ? "Checking" : "Play"
-	      }), " ", /*#__PURE__*/jsxRuntime.exports.jsx("br", {}), Boolean(skipsRemaining) && /*#__PURE__*/jsxRuntime.exports.jsx("button", {
-	        onClick: handleSkip,
-	        children: "Skip"
+	        id: "start",
+	        type: "button",
+	        onClick: goHome,
+	        children: "Home"
 	      })]
-	    }), /*#__PURE__*/jsxRuntime.exports.jsxs("p", {
-	      children: ["Rounds:", count]
-	    }), /*#__PURE__*/jsxRuntime.exports.jsx("button", {
-	      id: "start",
-	      type: "button",
-	      onClick: goHome,
-	      children: "Home"
-	    })]
+	    }) : /*#__PURE__*/jsxRuntime.exports.jsxs("div", {
+	      className: "gameplay",
+	      children: [!state.connectionError ? /*#__PURE__*/jsxRuntime.exports.jsx("button", {
+	        onClick: handleDisconnect,
+	        children: state.connecting ? /*#__PURE__*/jsxRuntime.exports.jsx("span", {
+	          children: "connecting..."
+	        }) : /*#__PURE__*/jsxRuntime.exports.jsx("span", {
+	          children: "disconnect"
+	        })
+	      }) // : connectionError.reason === 'player-name-taken' ? 
+	      //   (// <span>Player Name Taken</span>
+	      //   setGameState(0)
+	      //  
+	      : null, console.log(state), state.data.map(key => {
+	        return /*#__PURE__*/jsxRuntime.exports.jsxs("p", {
+	          children: [/*#__PURE__*/jsxRuntime.exports.jsx("span", {
+	            children: key.name
+	          }), key.id === state.playerId ? /*#__PURE__*/jsxRuntime.exports.jsx("span", {
+	            children: "(you)"
+	          }) : null]
+	        });
+	      }), /*#__PURE__*/jsxRuntime.exports.jsxs("form", {
+	        onSubmit: playGame,
+	        children: [/*#__PURE__*/jsxRuntime.exports.jsxs("h2", {
+	          children: [lhs, " ", operator, " ", rhs]
+	        }), /*#__PURE__*/jsxRuntime.exports.jsx("input", {
+	          autoFocus: true,
+	          value: ans,
+	          onChange: handleChange
+	        }), /*#__PURE__*/jsxRuntime.exports.jsx("button", {
+	          type: "submit",
+	          disabled: checkingAnswer,
+	          children: checkingAnswer ? "Checking" : "Play"
+	        }), " ", /*#__PURE__*/jsxRuntime.exports.jsx("br", {}), Boolean(skipsRemaining) && /*#__PURE__*/jsxRuntime.exports.jsx("button", {
+	          onClick: handleSkip,
+	          children: "Skip"
+	        })]
+	      }), /*#__PURE__*/jsxRuntime.exports.jsxs("p", {
+	        children: ["Rounds:", count]
+	      }), /*#__PURE__*/jsxRuntime.exports.jsx("button", {
+	        id: "start",
+	        type: "button",
+	        onClick: goHome,
+	        children: "Home"
+	      })]
+	    })
 	  });
 	};
 
@@ -36319,12 +36508,18 @@
 	};
 
 	const EndScreen = props => {
+	  const stateManager = useGlobalState();
 	  const {
-	    name,
-	    count,
-	    setCount,
+	    state,
 	    setRound,
-	    setGameState,
+	    setCount,
+	    setGameState
+	  } = stateManager;
+	  const {
+	    count,
+	    name
+	  } = state;
+	  const {
 	    allGames
 	  } = props;
 
@@ -36357,185 +36552,33 @@
 	  });
 	};
 
-	const init = () => ({
-	  round: 3,
-	  gameState: 0,
-	  count: 1,
-	  // allGames:[]
-	  name: "",
-	  connecting: false,
-	  connected: false,
-	  connectionError: null,
-	  id: null,
-	  webSocketConnection: null,
-	  data: []
-	});
-
-	const messageReceived = (state, parsedMessage) => {
-	  // parsed message is an object of the format {eventName: String, payload: Object}
-	  if (parsedMessage.eventName === 'online-players') {
-	    return _objectSpread2(_objectSpread2({}, state), {}, {
-	      data: parsedMessage.payload
-	    });
-	  } else {
-	    return _objectSpread2(_objectSpread2({}, state), {}, {
-	      playerId: parsedMessage.payload.playerId
-	    });
-	  }
-	}; // const deleteOngoing = (state, gameId) => {
-	//     const current = state.ongoing;
-	//     delete current[gameId];
-	//     return {
-	//         ...state, 
-	//         ongoing: current
-	//     };
-	// };
-
-
-	const reducer = (state, action) => {
-	  switch (action.type) {
-	    case "selectRounds":
-	      return _objectSpread2(_objectSpread2({}, state), {}, {
-	        round: action.payload
-	      });
-
-	    case "changeGameState":
-	      return _objectSpread2(_objectSpread2({}, state), {}, {
-	        gameState: action.payload
-	      });
-
-	    case "changeCount":
-	      return _objectSpread2(_objectSpread2({}, state), {}, {
-	        count: state.count + 1
-	      });
-
-	    case "changeName":
-	      return _objectSpread2(_objectSpread2({}, state), {}, {
-	        name: action.payload
-	      });
-
-	    case "CONNECTING":
-	      return _objectSpread2(_objectSpread2({}, state), {}, {
-	        connecting: true,
-	        connected: false,
-	        webSocketConnection: action.payload,
-	        connectionError: null
-	      });
-
-	    case "CONNECTED":
-	      return _objectSpread2(_objectSpread2({}, state), {}, {
-	        connecting: false,
-	        connected: true,
-	        connectionError: null
-	      });
-
-	    case "DISCONNECTED":
-	      return _objectSpread2(_objectSpread2({}, state), {}, {
-	        connecting: false,
-	        connected: false,
-	        connectionError: action.payload.reason
-	      });
-
-	    case "MESSAGE_RECEIVED":
-	      return messageReceived(state, action.payload);
-
-	    case "deleteFromOngoing":
-	      return deleteOngoing(state, action.payload);
-
-	    default:
-	      throw new Error("Invalid reducers reducer usage");
-	  }
-	};
-	const selectRounds = newRound => ({
-	  type: "selectRounds",
-	  payload: newRound
-	});
-	const changeGameState = newGameState => ({
-	  type: "changeGameState",
-	  payload: newGameState
-	});
-	const changeCount = newCount => ({
-	  type: "changeCount",
-	  payload: newCount
-	});
-	const changeName = name => ({
-	  type: "changeName",
-	  payload: name
-	});
-	const onOpen = () => ({
-	  type: "CONNECTED",
-	  payload: null
-	});
-	const onConnecting = websocketConnection => ({
-	  type: "CONNECTING",
-	  payload: websocketConnection
-	});
-	const onMessage = parsedMessage => ({
-	  type: "MESSAGE_RECEIVED",
-	  payload: parsedMessage
-	}); // note that reason is an object of format {reason: string}
-
-	const onClose = reason => ({
-	  type: "DISCONNECTED",
-	  payload: reason
-	});
-
-	const App = props => {
+	const StateApp = props => {
 	  const [allGames, setAllGames] = react.exports.useState([]);
-	  const [state, dispatch] = react.exports.useReducer(reducer, undefined, init);
 	  const [currentGame, setCurrentGame] = react.exports.useState({});
-
-	  const setRound = round => dispatch(selectRounds(round));
-
-	  const setGameState = gameState => dispatch(changeGameState(gameState));
-
-	  const setCount = newCount => dispatch(changeCount(newCount));
-
-	  const setName = name => dispatch(changeName(name));
-
-	  const onOpen$1 = () => dispatch(onOpen());
-
-	  const onConnecting$1 = websocketconnection => dispatch(onConnecting(websocketconnection));
-
-	  const onMessage$1 = parsedMessage => dispatch(onMessage(parsedMessage));
-
-	  const onClose$1 = reason => dispatch(onClose(reason));
-
+	  const stateManager = useGlobalState();
+	  const {
+	    state
+	  } = stateManager;
 	  return /*#__PURE__*/jsxRuntime.exports.jsxs("div", {
 	    children: [state.gameState === 0 && /*#__PURE__*/jsxRuntime.exports.jsx(StartScreen, {
 	      allGames: allGames,
-	      setGameState: setGameState,
-	      round: state.round,
-	      setRound: setRound,
-	      setCurrentGame: setCurrentGame,
-	      name: state.name,
-	      setName: setName
+	      setCurrentGame: setCurrentGame
 	    }), state.gameState === 1 && /*#__PURE__*/jsxRuntime.exports.jsx(PlayScreen, {
-	      count: state.count,
-	      setCount: setCount,
-	      name: state.name // round={state.round}
-	      ,
-	      setGameState: setGameState,
 	      currentGame: currentGame,
 	      setCurrentGame: setCurrentGame,
-	      setAllGames: setAllGames,
-	      onOpen: onOpen$1,
-	      onClose: onClose$1,
-	      onConnecting: onConnecting$1,
-	      onMessage: onMessage$1 // connectWebSocket = {props.connectWebSocket}
-	      ,
-	      state: state
+	      setAllGames: setAllGames
 	    }), state.gameState === 2 && /*#__PURE__*/jsxRuntime.exports.jsx(EndScreen, {
-	      name: state.name,
-	      count: state.count,
-	      setCount: setCount,
-	      setRound: setRound,
-	      setGameState: setGameState,
 	      allGames: allGames,
 	      setAllGames: setAllGames
 	    })]
 	  });
 	};
+
+	function App(props) {
+	  return /*#__PURE__*/jsxRuntime.exports.jsx(StateProvider, {
+	    children: /*#__PURE__*/jsxRuntime.exports.jsx(StateApp, {})
+	  });
+	}
 
 	function styleInject(css, ref) {
 	  if (ref === void 0) ref = {};

@@ -1,23 +1,28 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react';
+import { useGlobalState } from "../StateContext";
 
 export function StartScreen(props) {
-    const {name, setName, round, setRound, setGameState, setCurrentGame, allGames} = props;
-    const [isLoading, setIsLoading] = useState(false)
-    const [requestStatus, setRequestStatus] = useState("");
+  const stateManager = useGlobalState();
+  const { state, setRound, setGameState, setName } = stateManager;
+  const { round, name } = state;
 
-    const CONTAINS_GAMES = allGames.length > 0
+  const { setCurrentGame, allGames} = props;
+  const [isLoading, setIsLoading] = useState(false)
+  const [requestStatus, setRequestStatus] = useState("");
 
-    useEffect(() => {
-      if(CONTAINS_GAMES){
-        startGame()
-      }
-    }, [])
+  const CONTAINS_GAMES = allGames.length > 0
 
-    const successful = requestStatus === "success";
-    const failure = requestStatus === "error"
+  useEffect(() => {
+    if(CONTAINS_GAMES){
+      startGame()
+    }
+  }, [])
 
-    const startGame = async (e) => { 
-      setIsLoading(true);
+  const successful = requestStatus === "success";
+  const failure = requestStatus === "error"
+
+  const startGame = async (e) => { 
+    setIsLoading(true);
       if (e) {
         e.preventDefault(); 
       }
@@ -45,7 +50,7 @@ export function StartScreen(props) {
     })
         setGameState(1);
         setIsLoading(false);
-       }
+  }
 
     const handleChange = ({ target })=> {
         const newRound = target.value;
