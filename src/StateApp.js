@@ -5,7 +5,7 @@ import { EndScreen } from './screenComponents/EndScreen';
 import { useGlobalState } from "./StateContext";
 
 export const StateApp = (props) => {
-    const [allGames, setAllGames] = useState([]);
+    // const [allGames, setAllGames] = useState([]);
     const [currentGame, setCurrentGame] = useState({});
     const stateManager = useGlobalState();
     const { state} = stateManager;
@@ -14,7 +14,7 @@ export const StateApp = (props) => {
         <div>
             {state.gameState === 0 && (
                 <StartScreen 
-                    allGames={allGames}
+                    // allGames={allGames}
                     setCurrentGame={setCurrentGame}
                 />
             )}
@@ -23,14 +23,14 @@ export const StateApp = (props) => {
                 <PlayScreen 
                     currentGame={currentGame}
                     setCurrentGame={setCurrentGame}   
-                    setAllGames={setAllGames}
+                    // setAllGames={setAllGames}
                 />
             )}
         
             {state.gameState === 2 && (
                 <EndScreen 
-                    allGames={allGames} 
-                    setAllGames={setAllGames}
+                    // allGames={allGames} 
+                    // setAllGames={setAllGames}
                 />
             )}
         </div>

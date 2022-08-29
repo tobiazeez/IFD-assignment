@@ -5,10 +5,8 @@ import { useGlobalState } from "../StateContext";
 
 export const EndScreen = (props) => {
     const stateManager = useGlobalState();
-    const { state, setRound, setCount, setGameState } = stateManager;
-    const { count, name } = state;
-
-    const { allGames} = props;
+    const { state, setRound, setCount, setGameState,setAllGames } = stateManager;
+    const { count, name, allGames } = state;
   
     const startNewGame = () => {
       setGameState(0);
@@ -20,7 +18,7 @@ export const EndScreen = (props) => {
     return (
     <div>
         {allGames.map((gamesForSession, i) => {
-            const timeSpent = gamesForSession.reduce((total,game) => total + game.timeSpentMillis, 0);
+            // const timeSpent = gamesForSession.reduce((total,game) => total + game.timeSpentMillis, 0);
                     return (
                         <div className="expressions-history" key={i}>
                             <h4>Game {i+1}</h4> 

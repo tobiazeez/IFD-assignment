@@ -32905,7 +32905,8 @@
 	  round: 3,
 	  gameState: 0,
 	  count: 1,
-	  // allGames:[]
+	  allGames: [],
+	  // currentGame:{},
 	  name: "",
 	  connecting: false,
 	  connected: false,
@@ -32928,6 +32929,17 @@
 	  }
 	};
 
+	const updateAllGames = (state, gamesForSession) => _objectSpread2(_objectSpread2({}, state), {}, {
+	  allGames: state.allGames.concat([_objectSpread2({}, gamesForSession)]) // ongoing: {
+	  //     ...state.ongoing,
+	  //     [state.id]: {
+	  //         ...state.ongoing[state.id],
+	  //         allGames: state.ongoing[state.id].allGames.concat([{...memoryObject}])
+	  //     }
+	  // }
+
+	});
+
 	const reducer = (state, action) => {
 	  switch (action.type) {
 	    case "selectRounds":
@@ -32949,6 +32961,11 @@
 	      return _objectSpread2(_objectSpread2({}, state), {}, {
 	        name: action.payload
 	      });
+
+	    case "changeAllGames":
+	      return updateAllGames(state, action.payload);
+	    // case "updateCurrentGames":
+	    //     return {...state, game: action.payload};
 
 	    case "CONNECTING":
 	      return _objectSpread2(_objectSpread2({}, state), {}, {
@@ -32995,6 +33012,12 @@
 	  type: "changeName",
 	  payload: name
 	});
+	const changeAllGames = gamesForSession => ({
+	  type: "changeAllGames",
+	  payload: gamesForSession
+	}); // export const updateCurrentGame = () => ({
+	// })
+
 	const onWebsocketOpen = () => ({
 	  type: "CONNECTED",
 	  payload: null
@@ -34329,6 +34352,8 @@
 
 	  const setName = name => dispatch(changeName(name));
 
+	  const setAllGames = gamesForSession => dispatch(changeAllGames(gamesForSession));
+
 	  const onOpen = () => dispatch(onWebsocketOpen());
 
 	  const onConnecting = websocketconnection => dispatch(onWebsocketConnecting(websocketconnection));
@@ -34343,6 +34368,7 @@
 	    setCount,
 	    setName,
 	    setGameState,
+	    setAllGames,
 	    onOpen,
 	    onConnecting,
 	    onMessage,
@@ -34364,11 +34390,11 @@
 	  } = stateManager;
 	  const {
 	    round,
-	    name
+	    name,
+	    allGames
 	  } = state;
 	  const {
-	    setCurrentGame,
-	    allGames
+	    setCurrentGame
 	  } = props;
 	  const [isLoading, setIsLoading] = react.exports.useState(false);
 	  const [requestStatus, setRequestStatus] = react.exports.useState("");
@@ -34557,8 +34583,7 @@
 	const PlayScreen = props => {
 	  const {
 	    currentGame,
-	    setCurrentGame,
-	    setAllGames
+	    setCurrentGame
 	  } = props;
 	  const stateManager = useGlobalState();
 	  const {
@@ -34570,7 +34595,8 @@
 	    onMessage,
 	    onClose,
 	    state,
-	    setGameState
+	    setGameState,
+	    setAllGames
 	  } = stateManager;
 	  const {
 	    count,
@@ -36513,15 +36539,14 @@
 	    state,
 	    setRound,
 	    setCount,
-	    setGameState
+	    setGameState,
+	    setAllGames
 	  } = stateManager;
 	  const {
 	    count,
-	    name
-	  } = state;
-	  const {
+	    name,
 	    allGames
-	  } = props;
+	  } = state;
 
 	  const startNewGame = () => {
 	    setGameState(0); //   setCount(1);
@@ -36530,7 +36555,7 @@
 
 	  return /*#__PURE__*/jsxRuntime.exports.jsxs("div", {
 	    children: [allGames.map((gamesForSession, i) => {
-	      const timeSpent = gamesForSession.reduce((total, game) => total + game.timeSpentMillis, 0);
+	      // const timeSpent = gamesForSession.reduce((total,game) => total + game.timeSpentMillis, 0);
 	      return /*#__PURE__*/jsxRuntime.exports.jsxs("div", {
 	        className: "expressions-history",
 	        children: [/*#__PURE__*/jsxRuntime.exports.jsxs("h4", {
@@ -36553,24 +36578,23 @@
 	};
 
 	const StateApp = props => {
-	  const [allGames, setAllGames] = react.exports.useState([]);
+	  // const [allGames, setAllGames] = useState([]);
 	  const [currentGame, setCurrentGame] = react.exports.useState({});
 	  const stateManager = useGlobalState();
 	  const {
 	    state
 	  } = stateManager;
 	  return /*#__PURE__*/jsxRuntime.exports.jsxs("div", {
-	    children: [state.gameState === 0 && /*#__PURE__*/jsxRuntime.exports.jsx(StartScreen, {
-	      allGames: allGames,
+	    children: [state.gameState === 0 && /*#__PURE__*/jsxRuntime.exports.jsx(StartScreen // allGames={allGames}
+	    , {
 	      setCurrentGame: setCurrentGame
 	    }), state.gameState === 1 && /*#__PURE__*/jsxRuntime.exports.jsx(PlayScreen, {
 	      currentGame: currentGame,
-	      setCurrentGame: setCurrentGame,
-	      setAllGames: setAllGames
-	    }), state.gameState === 2 && /*#__PURE__*/jsxRuntime.exports.jsx(EndScreen, {
-	      allGames: allGames,
-	      setAllGames: setAllGames
-	    })]
+	      setCurrentGame: setCurrentGame // setAllGames={setAllGames}
+
+	    }), state.gameState === 2 && /*#__PURE__*/jsxRuntime.exports.jsx(EndScreen // allGames={allGames} 
+	    // setAllGames={setAllGames}
+	    , {})]
 	  });
 	};
 

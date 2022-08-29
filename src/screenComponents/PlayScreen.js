@@ -5,9 +5,9 @@ import { useGlobalState } from "../StateContext";
  
 
 export const PlayScreen = (props) => {
-    const {currentGame, setCurrentGame, setAllGames} = props;
+    const {currentGame, setCurrentGame} = props;
     const stateManager = useGlobalState();
-    const { onOpen, setName, setCount, setRound, onConnecting, onMessage, onClose, state, setGameState } = stateManager;
+    const { onOpen, setName, setCount, setRound, onConnecting, onMessage, onClose, state, setGameState, setAllGames } = stateManager;
     const { count, name, connectionError } = state;
 
     const connectWebSocket = props.connectWebSocket || defaultConnectWebSocket;
