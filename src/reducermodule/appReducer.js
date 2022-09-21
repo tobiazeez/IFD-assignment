@@ -3,7 +3,7 @@ export const init = () => ({
     gameState: 0,
     count: 1,
     allGames:[],
-    // currentGame:{},
+    currentGame:{},
     name: "",
     connecting: false,
     connected: false,
@@ -14,7 +14,6 @@ export const init = () => ({
 });
 
 const messageReceived = (state, parsedMessage) => {
-    // parsed message is an object of the format {eventName: String, payload: Object}
     if (parsedMessage.eventName === 'online-players') {
         return {
             ...state,
@@ -30,14 +29,7 @@ const messageReceived = (state, parsedMessage) => {
 
 const updateAllGames = (state, gamesForSession) => ({
     ...state,
-    allGames: state.allGames.concat([{...gamesForSession}]),
-    // ongoing: {
-    //     ...state.ongoing,
-    //     [state.id]: {
-    //         ...state.ongoing[state.id],
-    //         allGames: state.ongoing[state.id].allGames.concat([{...memoryObject}])
-    //     }
-    // }
+    allGames: [...state.allGames, gamesForSession],
 })
 
 export const reducer = (state, action) => {
@@ -51,9 +43,9 @@ export const reducer = (state, action) => {
         case "changeName":
             return {...state, name: action.payload};
         case "changeAllGames": 
-            return updateAllGames(state, action.payload)
-        // case "updateCurrentGames":
-        //     return {...state, game: action.payload};
+            return updateAllGames(state, action.payload);
+        case "updateCurrentGame":
+            return {...state, currentGame: action.payload};
         case "CONNECTING":
             return {
                 ...state,
@@ -103,9 +95,10 @@ export const changeAllGames = (gamesForSession) => ({
     payload: gamesForSession
 });
 
-// export const updateCurrentGame = () => ({
-
-// })
+export const updateCurrentGame = (currentGame) => ({
+    type: "updateCurrentGame",
+    payload: currentGame
+});
 
 export const onWebsocketOpen = () => ({
     type: "CONNECTED",

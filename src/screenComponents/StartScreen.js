@@ -3,10 +3,10 @@ import { useGlobalState } from "../StateContext";
 
 export function StartScreen(props) {
   const stateManager = useGlobalState();
-  const { state, setRound, setGameState, setName } = stateManager;
+  const { state, setRound, setGameState, setName, setCurrentGame } = stateManager;
   const { round, name, allGames } = state;
 
-  const { setCurrentGame } = props;
+  // const { setCurrentGame } = props;
   const [isLoading, setIsLoading] = useState(false)
   const [requestStatus, setRequestStatus] = useState("");
 

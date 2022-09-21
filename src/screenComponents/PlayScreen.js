@@ -5,10 +5,9 @@ import { useGlobalState } from "../StateContext";
  
 
 export const PlayScreen = (props) => {
-    const {currentGame, setCurrentGame} = props;
     const stateManager = useGlobalState();
-    const { onOpen, setName, setCount, setRound, onConnecting, onMessage, onClose, state, setGameState, setAllGames } = stateManager;
-    const { count, name, connectionError } = state;
+    const { onOpen, setName, setCount, setRound, onConnecting, onMessage, onClose, state, setGameState, setAllGames, setCurrentGame } = stateManager;
+    const { count, name, connectionError, currentGame } = state;
 
     const connectWebSocket = props.connectWebSocket || defaultConnectWebSocket;
 
@@ -26,9 +25,10 @@ export const PlayScreen = (props) => {
     const [gamesInSession, setGamesInSession] = useState([]); 
     const [ ans, setAns ] = useState("");
     const [checkingAnswer, setCheckingAnswer] = useState(false)
-
+  
     const { nextExpression, skipsRemaining } = currentGame;
     const { lhs, rhs, operator } = nextExpression;
+
 
       const handleSkip = () => {
         calculateGame(true);
@@ -76,7 +76,7 @@ export const PlayScreen = (props) => {
           setCount((count) => count + 1);
           setCheckingAnswer(false)
          } else {
-          setAllGames((allPrevGames) => [...allPrevGames, [...gamesInSession, gameJustPlayed]]);
+          setAllGames([...gamesInSession, gameJustPlayed]);
           setGameState(2);
          }
         })
@@ -87,10 +87,10 @@ export const PlayScreen = (props) => {
 
       const goHome = () => {
         setAllGames([])
-        setCurrentGame([]);
+        setCurrentGame({});
         setGameState(0)
-        setCount(1);
-        setRound(count)
+        setCount(count);
+        // setRound(count)
       }
 
       const handleChange = (e) => {
@@ -100,9 +100,9 @@ export const PlayScreen = (props) => {
       const handleDisconnect = async () => {  
         state.webSocketConnection.close();
         goHome();
-        setName('');
-        setCount(1);
-        setRound(count);
+        // setName('');
+        // setCount(1);
+        // setRound(count);
     };
     
   return (

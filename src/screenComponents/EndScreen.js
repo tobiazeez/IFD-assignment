@@ -18,7 +18,7 @@ export const EndScreen = (props) => {
     return (
     <div>
         {allGames.map((gamesForSession, i) => {
-            // const timeSpent = gamesForSession.reduce((total,game) => total + game.timeSpentMillis, 0);
+            const timeSpent = gamesForSession.reduce((total,game) => total + game.timeSpentMillis, 0);
                     return (
                         <div className="expressions-history" key={i}>
                             <h4>Game {i+1}</h4> 

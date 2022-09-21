@@ -8,7 +8,7 @@ import { createContext, useReducer, useContext } from "react";
     init,
     changeCount,
     changeName,
-    // updateAllGames,
+    updateCurrentGame,
     changeAllGames,
     onWebsocketOpen,
     onWebsocketClose,
@@ -26,6 +26,7 @@ import { createContext, useReducer, useContext } from "react";
     const setGameState = (gameState) => dispatch(changeGameState(gameState));
     const setCount = (newCount) => dispatch(changeCount(newCount));
     const setName = (name) => dispatch(changeName(name));
+    const setCurrentGame = (currentGame) => dispatch(updateCurrentGame(currentGame));
     const setAllGames = (gamesForSession) => dispatch(changeAllGames(gamesForSession));
     const onOpen = () => dispatch(onWebsocketOpen());
     const onConnecting = (websocketconnection) => dispatch(onWebsocketConnecting(websocketconnection));
@@ -38,6 +39,7 @@ import { createContext, useReducer, useContext } from "react";
      setCount,
      setName,
      setGameState,
+     setCurrentGame,
      setAllGames,
      onOpen,
      onConnecting,
